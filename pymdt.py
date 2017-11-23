@@ -302,7 +302,7 @@ class ModemFirmware(ELFFile):
 				d = n-len(s)
 				if d > 0: s += d*" "
 				return s
-			return ("@%08x |%2d | %s | entry %8x pri %4x stack_sz %5d cpu %x"%(
+			return ("@%08x |%2d | %s | entry %8x pri %4x stack_sz %5d cpu %x"%(
 				self.addr, self.typ, pad(self.modem.get_string(self.name),20),
 				self.entry, self.pri, self.stack_size, self.cpu ))
 

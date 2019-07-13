@@ -113,7 +113,8 @@ class ELFFile:
 			pidx = prog_hdr + self.h.e_phentsize*i
 			phdr = PHDR.unpack(self.contents[pidx:pidx+self.h.e_phentsize])
 			pdata = self.load_seg(phdr)
-			assert(phdr.p_filesz == len(pdata))
+			if phdr.p_filesz:
+				assert(phdr.p_filesz == len(pdata))
 			self.seg.append(Segment(phdr, pdata))
 			#print (phdr)
 		assert (not self.check_ssd())
@@ -199,10 +200,11 @@ class ELFFile:
 				# skip elf segment
 				assert(s.data[:52+32*len(self.seg)] == hdr)
 				continue
-			if s.h.p_flags == 0x2200000:
+			if s.h.p_flags == 0x2200000 or s.data is None:
 				h = b'\0'*20
 				# skip hashes
-			else: h = sha1(s.data).digest()
+			else:
+				h = sha1(s.data).digest()
 			hb += h
 		return hb
 
@@ -273,17 +275,17 @@ class ELFFile:
 		return s
 
 	def write_mdt(self, path):
-		i = 0
-		for s in self.seg:
-			open("%s.b%02d"%(path,i),"wb").write(s.data)
-			i += 1
+		for i,s in enumerate(self.seg):
+			if s.data is not None:
+				open("%s.b%02d"%(path,i),"wb").write(s.data)
 		open("%s.mdt"%path,"wb").write(self.seg[0].data+self.seg[1].data)
 
 	def write(self, path):
 		of = open(path, 'wb')
 		for s in self.seg:
 			of.write(b'\0'*(s.h.p_offset - of.tell()))
-			of.write(s.data)
+			if s.data is not None:
+				of.write(s.data)
 		of.close()
         
 
